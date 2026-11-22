@@ -65,6 +65,8 @@ main{max-width:1180px;margin:0 auto;padding:26px 16px 70px}
 .stage canvas{display:block;width:100%;height:380px;cursor:grab;touch-action:pan-y}
 .stage .cap{position:absolute;inset-inline:14px;bottom:10px;display:flex;justify-content:space-between;gap:10px;font-size:.78rem;color:var(--mute);pointer-events:none}
 .fallback{padding:18px;display:flex;flex-direction:column;gap:8px}
+.steps{margin:0;padding-inline-start:22px;display:flex;flex-direction:column;gap:8px}
+.steps a{color:var(--cream)}
 .tip3d{position:absolute;z-index:3;background:var(--cream);color:var(--ink);padding:6px 12px;border-radius:999px;font-size:.84rem;font-weight:600;pointer-events:none;white-space:nowrap;box-shadow:0 8px 20px rgba(0,0,0,.35)}
 .tip3d[hidden]{display:none}
 .loc{display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:inherit;text-decoration:none;transition:border-color .2s,transform .15s}
@@ -218,9 +220,17 @@ const PCOLS=['#ff5b3a','#ffc247','#a8d672','#7fb7ff','#d79bff','#ff9ec4','#6fe0c
 let PARTNERS={},PK=[];
 function syncPartners(){PK=(S.partners||[]).map(p=>p.key);PARTNERS={};(S.partners||[]).forEach((p,i)=>PARTNERS[p.key]={hu:p.hu||p.name,ar:p.ar||p.name,c:p.c||PCOLS[i%PCOLS.length]})}
 const ow=(o,k)=>+(o&&o[k])||0;
+// A clean company for real work on this device: the produce list, three shops, owner + two partners, and nothing else.
+function fresh(){
+  return{lang:'ar',wasteMode:'separate',whOwn:{o:50,a:25,b:25},
+    partners:[{key:'o',hu:'Tulajdonos',ar:'المالك'},{key:'a',hu:'Partner A',ar:'الشريك أ'},{key:'b',hu:'Partner B',ar:'الشريك ب'}],
+    products:P0.map(p=>({id:p[0],hu:p[1],ar:p[2],e:p[3],c:p[4],kg:p[5],sh:p[7],cat:p[8],price:0,cost:0})),
+    shops:[{id:'s1',hu:'Bolt 1',ar:'محل 1',own:{o:50,a:25,b:25}},{id:'s2',hu:'Bolt 2',ar:'محل 2',own:{o:50,a:25,b:25}},{id:'s3',hu:'Bolt 3',ar:'محل 3',own:{o:100,a:0,b:0}}],
+    receipts:[],transfers:[],closes:[],whWaste:[],draws:[],counts:[],suppliers:[],orders:[],payments:[],workers:[]};
+}
 function seed(){
   let s=7;const r=()=>(s=(s*16807)%2147483647)/2147483647;
-  const st={lang:'ar',wasteMode:'separate',whOwn:{o:50,a:25,b:25},partners:[{key:'o',hu:'Tulajdonos',ar:'المالك'},{key:'a',hu:'Partner A',ar:'الشريك أ'},{key:'b',hu:'Partner B',ar:'الشريك ب'}],
+  const st={demo:true,lang:'ar',wasteMode:'separate',whOwn:{o:50,a:25,b:25},partners:[{key:'o',hu:'Tulajdonos',ar:'المالك'},{key:'a',hu:'Partner A',ar:'الشريك أ'},{key:'b',hu:'Partner B',ar:'الشريك ب'}],
     products:P0.map(p=>({id:p[0],hu:p[1],ar:p[2],e:p[3],c:p[4],kg:p[5],sh:p[7],cat:p[8],price:Math.round(p[6]*1.45/10)*10})),
     shops:[{id:'s1',hu:'Belváros',ar:'محل المركز',own:{o:50,a:25,b:25}},{id:'s2',hu:'Újbuda',ar:'محل أويبودا',own:{o:50,a:25,b:25}},{id:'s3',hu:'Piac',ar:'محل السوق',own:{o:100,a:0,b:0}}],
     receipts:[],transfers:[],closes:[],whWaste:[],draws:[],counts:[],suppliers:[],orders:[],payments:[],workers:[]};
@@ -320,6 +330,10 @@ soldT:['Mi fogyott el','شو انباع من البضاعة'],soldNeed:['Ehhez e
 arrivedS:['Volt + érkezett','كان + وصل'],leftS:['Maradt','ضل'],soldB:['Elfogyott (láda)','انباع (صندوق)'],priceKg:['Eladási ár / kg','سعر بيع الكيلو'],expVal:['Várt bevétel','المتوقع'],noPrice:['nincs ár','بدون سعر'],
 expTot:['Várt bevétel az elfogyott áruból','المتوقع من البضاعة اللي راحت'],actTot:['Tényleges bevétel (zárások)','المبيعات الفعلية (الإغلاقات)'],diffTot:['Különbség','الفرق'],diffNote:['A különbségben benne van a selejt, az árengedmény, a súlyeltérés és a hiány.','الفرق فيه التالف، التخفيضات، فرق الوزن، والنقص.'],unpricedN:['Ár nélküli tételek:','أصناف بدون سعر:'],
 margin:['Árrés','هامش الربح'],pricesT:['Eladási árak (Ft / kg)','أسعار البيع (Ft / كغ)'],pricesNote:['Minden mező szerkeszthető. Az árrés átírása kiszámolja az árat, az ár átírása az árrést. Üres beszerzési ár = a számlák átlaga.','كل الخانات بتتعدل. إذا غيّرت الهامش بينحسب السعر، وإذا غيّرت السعر بينحسب الهامش. تكلفة فاضية = متوسط الفواتير.'],showAllP:['Minden áru mutatása','اعرض كل الأصناف'],manual:['kézi','يدوي'],costKg:['Beszerzési ár / kg','تكلفة الكيلو'],savePrices:['Árak mentése','احفظ الأسعار'],soldRep:['Várt és tényleges bevétel','المتوقع مقابل الفعلي'],
+startT:['Első lépések','من وين تبدا'],st1:['Beállítások: add meg a boltok és partnerek nevét, a tulajdoni arányokat és a munkásokat','الإعدادات: سمّي المحلات والشركاء، حدد النسب، وضيف العمال'],st2:['Beállítások: írd be az eladási árakat','الإعدادات: حط أسعار البيع'],st3:['Áruátvétel: rögzítsd, amit ma vettél','استلام بضاعة: سجّل اللي اشتريته اليوم'],st4:['Raktár: küldd ki az árut a boltoknak','المستودع: ابعت البضاعة للمحلات'],st5:['Napi zárás és esti leltár minden boltban','إغلاق اليوم وجرد المسا لكل محل'],
+localWarn:['Az adatok csak ezen a készüléken, ebben a böngészőben vannak. Ments naponta biztonsági másolatot a Beállításokban.','البيانات محفوظة على هالجهاز وبهالمتصفح بس. نزّل نسخة احتياطية كل يوم من الإعدادات.'],
+namesHint:['A nevek átírhatók','الأسماء بتتعدل'],newShop:['Új bolt','محل جديد'],restoreL:['Visszaállítás mentésből (felülírja a mostani adatokat)','استرجاع من نسخة (بيمسح البيانات الحالية)'],restored:['Visszaállítva','انسترجعت النسخة'],restoreBad:['Ez nem Kosár mentés.','هاد مش ملف نسخة من البرنامج.'],
+dataT:['Adatok ezen a készüléken','البيانات على هالجهاز'],wipeBtn:['Minden adat törlése','صفّر كل البيانات'],demoBtn:['Minta adatok betöltése','حمّل بيانات تجريبية'],sureWipe:['Biztos? Minden mostani adat elvész','متأكد؟ كل البيانات الحالية بتروح'],
 xlsx:['Excel letöltése','تنزيل Excel'],pdf:['PDF letöltése','تنزيل PDF'],making:['Készül a fájl…','عم يجهز الملف…'],noDl:['A letöltés ebben a nézetben nem érhető el.','التنزيل مش متاح بهالعرض.'],dlFail:['A letöltés nem sikerült','ما زبط التنزيل'],
 protoNote:['Ez egy működő prototípus. A bevitt adatok csak ebben a böngészőben maradnak meg.','هاد نموذج شغال. البيانات اللي بتدخلها بتضل بهالمتصفح بس.']};
 const t=k=>T[k]?T[k][S.lang==='hu'?0:1]:k;
@@ -543,8 +557,9 @@ function vHome(){
   st.forEach(({sh,s})=>{if(s.short)al.push(`<span class="chip bad">${esc(L(sh))}: <span class="num">${s.short}</span> ${t('shortDays')}</span>`);if(s.cogs&&s.waste/s.cogs>.05)al.push(`<span class="chip warn">${t('highWaste')}: ${esc(L(sh))} <span class="num">${(s.waste/s.cogs*100).toFixed(1)}%</span></span>`)});
   if(openOrders().length&&allowed().includes('orders'))al.push(`<a class="chip" href="#orders" style="text-decoration:none">${t('openOrd')}: <span class="num">${openOrders().length}</span></a>`);
   freshness().filter(x=>x.age>x.lim).slice(0,4).forEach(x=>al.push(`<span class="chip bad">${t('oldStock')}: ${esc(x.p.e)} ${esc(L(x.p))} <span class="num">${x.age} ${t('dayU')}</span></span>`));
-  return`<section class="hero"><div>
-    <span class="chip">${t('demo')} · <span class="num">${period()}</span></span>
+  return`${!SB&&!S.receipts.length&&!S.closes.length?`<section class="card" style="border-color:var(--tomato)"><h3>${t('startT')}</h3><ol class="steps">${['st1','st2','st3','st4','st5'].map((k,i)=>`<li><a href="#${['setup','setup','receive','transfer','close'][i]}">${t(k)}</a></li>`).join('')}</ol><p class="note warn">${t('localWarn')}</p></section>`:''}
+  <section class="hero"><div>
+    ${S.demo||period()!=='—'?`<span class="chip">${S.demo?t('demo')+' · ':''}<span class="num">${period()}</span></span>`:''}
     <h1 style="margin-top:14px">${t('h1a')} <em>${t('h1b')}</em></h1>
     <p class="lead">${t('heroLead')}</p>
     <div class="big"><small>${t('monthProfit')}</small><span class="num" data-count="${Math.round(tp)}">${fmt(tp)}</span></div>
@@ -689,15 +704,16 @@ function reportText(){
   return o.join('\n');
 }
 function vSetup(){
-  const row=(id,name,own)=>`<tr><td>${esc(name)}</td>${PK.map(k=>`<td><input id="o-${id}-${k}" type="number" min="0" max="100" value="${ow(own,k)}" style="width:84px"></td>`).join('')}</tr>`;
+  const row=(id,name,own)=>`<tr><td>${id==='wh'?esc(name):`<input id="sn-${esc(id)}" value="${esc(name)}" maxlength="40" style="min-width:120px">`}</td>${PK.map(k=>`<td><input id="o-${id}-${k}" type="number" min="0" max="100" value="${ow(own,k)}" style="width:84px"></td>`).join('')}</tr>`;
   return`<div><h2>${t('setup')}</h2>${SB?'':`<p class="lead">${t('protoNote')}</p>`}</div>${teamCard()}
   <section class="card"><h3>${t('workersT')}</h3><p class="note">${t('workersNote')}</p><div class="tw"><table><tr><th>${t('worker')}</th><th>${t('shop')}</th><th></th></tr>
     ${S.workers.map((w,i)=>`<tr><td>${esc(w.name)}</td><td>${esc(L(shopOf(w.shop)||{hu:'—',ar:'—'}))}</td><td>${delBtn('workers',i)}</td></tr>`).join('')}</table></div>
     <form data-form="worker"><div class="f"><label>${t('worker')}<input id="wk-name" maxlength="40" required></label><label>${t('shop')}<select id="wk-shop">${S.shops.map(s=>`<option value="${esc(s.id)}">${esc(L(s))}</option>`).join('')}</select></label></div><button class="btn">${t('add')}</button></form></section>
-  <form class="card" data-form="setup"><h3>${t('ownTitle')}</h3><div class="tw"><table><tr><th></th>${PK.map(k=>`<th>${esc(L(PARTNERS[k]))}</th>`).join('')}</tr>
+  <form class="card" data-form="setup"><h3>${t('ownTitle')}</h3><div class="tw"><table><tr><th>${t('namesHint')}</th>${PK.map(k=>`<th><input id="pn-${esc(k)}" value="${esc(L(PARTNERS[k]))}" maxlength="40" style="width:110px"></th>`).join('')}</tr>
     ${S.shops.map(s=>row(s.id,L(s),s.own)).join('')}${row('wh',t('wh'),S.whOwn)}</table></div>
     <h3>${t('wasteRule')}</h3>${[['separate','mSep'],['own','mOwn'],['pull','mPull']].map(([v,k])=>`<label style="flex-direction:row;align-items:center;gap:8px;color:var(--cream);font-size:.95rem"><input type="radio" name="wm" id="wm-${v}" value="${v}" ${S.wasteMode===v?'checked':''}>${t(k)}</label>`).join('')}
     <p class="note warn" id="s-msg"></p><button class="btn">${t('saveSet')}</button></form>
+  <form class="card" data-form="shop"><h3>${t('newShop')}</h3><div class="f"><label>${t('shop')}<input id="ns-name" maxlength="40" required></label></div><button class="btn">${t('add')}</button></form>
   <form class="card" data-form="prices"><h3>${t('pricesT')}</h3><p class="note">${t('pricesNote')}</p>
     <label style="flex-direction:row;align-items:center;gap:8px;color:var(--cream)"><input type="checkbox" id="pr-all" style="width:auto" ${ui.allPrices?'checked':''}>${t('showAllP')}</label>
     <div class="tw"><table><tr><th>${t('product')}</th><th>${t('kgBox')}</th><th>${t('costKg')}</th><th>${t('priceKg')}</th><th>${t('margin')} %</th></tr>
@@ -712,8 +728,11 @@ function vSetup(){
   <form class="card" data-form="prod"><h3>${t('newProd')}</h3><div class="f"><label>${t('nameHu')}<input id="p-hu" maxlength="30" required></label><label>${t('nameAr')}<input id="p-ar" maxlength="30" required></label>
     <label>${t('icon')}<input id="p-e" maxlength="4" value="🥦"></label><label>${t('kgBox')}<input id="p-kg" type="number" min="0.1" step="0.1" value="10"></label>
     <label>${t('catL')}<select id="p-cat"><option value="v">${t('catV')}</option><option value="f">${t('catF')}</option><option value="h">${t('catH')}</option></select></label></div><button class="btn">${t('add')}</button></form>
-  <section class="card"><h3>${t('backupT')}</h3><p class="note">${t('backupNote')}</p>${canDl()?`<button type="button" class="btn ghost" data-act="backup">${t('backupBtn')}</button>`:`<span class="chip">${t('noDl')}</span>`}</section>
-  ${SB?'':`<button type="button" class="btn ghost" data-act="reset">${t('reset')}</button>`}`;
+  <section class="card"><h3>${t('backupT')}</h3><p class="note">${t('backupNote')}</p>${canDl()?`<button type="button" class="btn ghost" data-act="backup">${t('backupBtn')}</button>`:`<span class="chip">${t('noDl')}</span>`}
+    ${SB?'':`<label>${t('restoreL')}<input type="file" id="restore" accept="application/json,.json"></label>`}</section>
+  ${SB?'':`<section class="card"><h3>${t('dataT')}</h3><p class="note warn">${t('localWarn')}</p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn ghost" data-act="wipe" ${ui.confirm==='wipe'?'style="border-color:var(--tomato);color:var(--tomato)"':''}>${ui.confirm==='wipe'?t('sureWipe'):t('wipeBtn')}</button>
+    <button type="button" class="btn ghost" data-act="demo" ${ui.confirm==='demo'?'style="border-color:var(--tomato);color:var(--tomato)"':''}>${ui.confirm==='demo'?t('sureWipe'):t('demoBtn')}</button></div></section>`}`;
 }
 function vGate(){
   if(gate==='load')return`<div class="gatebox card"><p class="note">${t('loading')}</p></div>`;
@@ -917,7 +936,7 @@ function countUp(){
     (function step(n){const k=Math.min(1,(n-t0)/800),e=1-Math.pow(1-k,3);el.textContent=fmt(to*e);if(k<1&&el.isConnected)requestAnimationFrame(step)})(t0)});
 }
 function toast(m){document.querySelectorAll('.toast').forEach(x=>x.remove());const d=document.createElement('div');d.className='toast';d.textContent=m;document.body.appendChild(d);setTimeout(()=>d.remove(),2200)}
-function save(){if(SB){try{localStorage.setItem('kosar-lang',S.lang)}catch(e){}return}try{localStorage.setItem('kosar-v9',JSON.stringify(S))}catch(e){}}
+function save(){if(SB){try{localStorage.setItem('kosar-lang',S.lang)}catch(e){}return}try{localStorage.setItem('kosar-data',JSON.stringify(S))}catch(e){}}
 
 /* ---------- 3D ---------- */
 let three=null;
@@ -1113,9 +1132,17 @@ document.addEventListener('click',async e=>{
   if(a.dataset.act==='pdf'&&canDl())exportPdf();
   if(a.dataset.act==='read')readInvoice();
   if(a.dataset.act==='copy'){const tx=reportText();(navigator.clipboard?navigator.clipboard.writeText(tx):Promise.reject()).then(()=>toast(t('copied'))).catch(()=>toast(t('copyFail')))}
-  if(a.dataset.act==='reset'){const l=S.lang;S=seed();S.lang=l;animPid='all';save();render();toast(t('saved'))}
+  if((a.dataset.act==='wipe'||a.dataset.act==='demo')&&!SB){
+    if(ui.confirm!==a.dataset.act){ui.confirm=a.dataset.act;render();return}
+    const l=S.lang;S=a.dataset.act==='demo'?seed():fresh();S.lang=l;ui.confirm='';ui.month=undefined;animPid='all';save();location.hash='home';render();toast(t('saved'));
+  }
 });
 document.addEventListener('change',e=>{
+  if(e.target.id==='restore'&&!SB){
+    const f=e.target.files[0];if(!f)return;
+    f.text().then(tx=>{const o=JSON.parse(tx);if(!o||!Array.isArray(o.products)||!Array.isArray(o.shops))throw new Error('bad');delete o.exported;delete o.app;delete o.team;const l=S.lang;S=Object.assign(fresh(),o);S.lang=l;ui.month=undefined;animPid='all';save();render();toast(t('restored'))}).catch(()=>toast(t('restoreBad')));
+    return;
+  }
   if(e.target.id==='pr-all'){ui.allPrices=e.target.checked;render();return}
   if(e.target.id==='month'){if(e.target.value!=='custom')setMonth(e.target.value);render();return}
   if(e.target.id==='f-from'||e.target.id==='f-to'){setRange($('f-from').value,$('f-to').value);render();return}
@@ -1175,6 +1202,12 @@ document.addEventListener('submit',async e=>{
       if(Object.keys(patch).length){if(!await upd('products',x,patch))return render();n++}
     }
     render();toast(t('saved')+' · '+n);
+  }
+  if(f==='shop'){
+    const name=val('ns-name').trim().slice(0,40);if(!name)return toast(t('fill'));const own={};PK.forEach(k=>own[k]=k==='o'?100:0);
+    if(SB){const r=await SB.from('shops').insert({org_id:ME.org_id,hu:name,ar:name,own,sort:S.shops.length}).select().single();if(r.error)return toast(t('dbErr')+': '+r.error.message);S.shops.push(r.data)}
+    else{S.shops.push({id:'s'+Date.now().toString(36),hu:name,ar:name,own});save()}
+    render();toast(t('saved'));
   }
   if(f==='worker'){
     const name=val('wk-name').trim().slice(0,40),shop=val('wk-shop');if(!name||!shop)return toast(t('fill'));
@@ -1236,8 +1269,9 @@ document.addEventListener('submit',async e=>{
     const rows=[...S.shops.map(s=>s.id),'wh'],vals={};let ok=true;
     rows.forEach(id=>{vals[id]={};PK.forEach(k=>vals[id][k]=num('o-'+id+'-'+k));if(Math.abs(PK.reduce((x,k)=>x+vals[id][k],0)-100)>.001||PK.some(k=>vals[id][k]<0))ok=false});
     if(!ok){$('s-msg').textContent=t('sum100');return}
-    S.shops.forEach(s=>s.own=vals[s.id]);S.whOwn=vals.wh;const wm=document.querySelector('input[name=wm]:checked');if(wm)S.wasteMode=wm.value;
-    if(SB){const rs=await Promise.all([...S.shops.map(s=>SB.from('shops').update({own:s.own}).eq('id',s.id)),SB.from('orgs').update({waste_mode:S.wasteMode,wh_own:S.whOwn}).eq('id',ME.org_id)]);const bad=rs.find(r=>r.error);if(bad)return toast(t('dbErr')+': '+bad.error.message)}
+    S.shops.forEach(s=>{s.own=vals[s.id];const n=$('sn-'+s.id)&&$('sn-'+s.id).value.trim();if(n&&n!==L(s)){s.hu=n;s.ar=n}});S.whOwn=vals.wh;
+    const renamed=[];S.partners.forEach(q=>{const n=$('pn-'+q.key)&&$('pn-'+q.key).value.trim();if(n&&n!==L(PARTNERS[q.key])){q.hu=n;q.ar=n;q.name=n;renamed.push(q)}});const wm=document.querySelector('input[name=wm]:checked');if(wm)S.wasteMode=wm.value;
+    if(SB){const rs=await Promise.all([...renamed.map(q=>SB.from('partners').update({name:q.name}).eq('org_id',ME.org_id).eq('key',q.key)),...S.shops.map(s=>SB.from('shops').update({own:s.own,hu:s.hu,ar:s.ar}).eq('id',s.id)),SB.from('orgs').update({waste_mode:S.wasteMode,wh_own:S.whOwn}).eq('id',ME.org_id)]);const bad=rs.find(r=>r.error);if(bad)return toast(t('dbErr')+': '+bad.error.message)}
     save();render();toast(t('saved'));
   }
   if(f==='prod'){
@@ -1252,8 +1286,9 @@ addEventListener('hashchange',()=>{render();if(SB&&gate==='app'&&Date.now()-last
 function start(data){
   if(CFG.url&&CFG.key){S=blank();gate='load';render();lib('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js').then(bootDB).catch(e=>{authMsg=e.message||String(e);gate='auth';render()});return}
   S=data&&data.S;
-  if(!S){try{S=JSON.parse(localStorage.getItem('kosar-v9'))}catch(e){}}
-  if(!S||!S.products||!S.shops||!S.counts||!S.partners||!S.orders||S.products.length<40||!S.payments||!S.workers||S.products[0].price===undefined)S=seed();
+  if(!S){try{S=JSON.parse(localStorage.getItem('kosar-data'))}catch(e){}}
+  // Saved work is kept as it is; anything a newer version added is filled in with an empty default.
+  S=S&&Array.isArray(S.products)&&Array.isArray(S.shops)?Object.assign(fresh(),S):fresh();
   init3D();render();
   window.claude?.hot?.snapshot?.(()=>({S}));
   const u=window.claude?.use?.('sample');
