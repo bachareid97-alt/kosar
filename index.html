@@ -75,6 +75,8 @@ a.tile{text-decoration:none}
 .fallback .row{display:grid;grid-template-columns:150px 1fr 60px;gap:8px;align-items:center;font-size:.85rem}
 .fallback i{display:block;height:10px;border-radius:5px}
 
+/* grid children may shrink below their content, so wide tables scroll inside their card instead of stretching the page */
+.two>*,.grid3>*,.hero>*{min-width:0}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px}
 .card{background:var(--plum);border:1px solid var(--line);border-radius:18px;padding:18px;display:flex;flex-direction:column;gap:10px}
 .tilt{transform:perspective(800px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .18s ease-out,border-color .2s;transform-style:preserve-3d;will-change:transform}
@@ -156,7 +158,31 @@ a.card{color:inherit;text-decoration:none;cursor:pointer}
 .meter{height:8px;background:var(--plum2);border-radius:4px;overflow:hidden;direction:ltr}
 .meter i{display:block;height:100%;border-radius:4px}
 .ask{flex-direction:row;gap:10px;flex-wrap:wrap}.ask input{flex:1;min-width:200px}
-@media(max-width:820px){.hero,.two{grid-template-columns:1fr}}
+@media(max-width:820px){
+  .hero,.two{grid-template-columns:minmax(0,1fr)}
+  header{position:static}
+  .bar{padding:8px 12px;gap:8px}
+  .brand small{display:none}
+  .bar2{flex-direction:column;align-items:stretch;gap:8px;padding-bottom:10px}
+  /* tabs become one swipeable row instead of a tall stack */
+  nav{flex:none;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;width:100%;max-width:100%;min-width:0}
+  nav::-webkit-scrollbar{display:none}
+  nav a{flex:none;padding:8px 14px}
+  .range{flex-wrap:wrap;width:100%;max-width:100%;min-width:0}
+  .range input{flex:1 1 40%;min-width:0;font-size:16px;padding:7px 10px}
+  .range select{flex:1 1 100%;font-size:16px;padding:7px 10px}
+  main{padding:16px 12px 60px}
+  .view{gap:16px}
+  .card{padding:14px;border-radius:16px}
+  .stage{min-height:300px}.stage canvas{height:300px}
+  .stage .cap{font-size:.72rem}
+  .tiles{grid-template-columns:repeat(auto-fill,minmax(74px,1fr))}
+  th,td{padding:7px 8px}
+  .trio{gap:14px}
+  .paper h2{font-size:1.5rem}
+  .btn{align-self:stretch;text-align:center}
+  .toast{max-width:calc(100vw - 24px);white-space:normal;text-align:center;border-radius:16px}
+}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.tilt{transform:none!important}}
 </style>
 </head>
@@ -877,6 +903,8 @@ function render(){
   if(v==='shop')mount3D(curShop());
   if(v==='item')mount3D('item:'+curItem());
   if(v==='transfer')moveLeft();
+  if(v==='close')closeLive();
+  try{const nv=$('nav'),on=nv.querySelector('a.on');if(on&&nv.scrollWidth>nv.clientWidth){const a=on.getBoundingClientRect(),b=nv.getBoundingClientRect();nv.scrollLeft+=(a.left+a.width/2)-(b.left+b.width/2)}}catch(e){} // keep the current tab in view without moving the page
   if(v==='partners')countUp();
   document.querySelectorAll('.tilt').forEach(el=>{
     el.addEventListener('pointermove',e=>{if(reduced||e.pointerType==='touch')return;const r=el.getBoundingClientRect();el.style.setProperty('--ry',((e.clientX-r.left)/r.width-.5)*14+'deg');el.style.setProperty('--rx',(.5-(e.clientY-r.top)/r.height)*12+'deg')});
@@ -929,7 +957,7 @@ function init3D(){
     requestAnimationFrame(loop);
   }catch(e){three=null}
 }
-function size3D(){if(!three||!three.canvas.isConnected)return;const w=three.canvas.parentElement.clientWidth,h=380;if(!w)return;three.renderer.setSize(w,h,false);three.cam.aspect=w/h;three.cam.updateProjectionMatrix()}
+function size3D(){if(!three||!three.canvas.isConnected)return;const w=three.canvas.parentElement.clientWidth,h=three.canvas.clientHeight||380;if(!w)return;three.renderer.setSize(w,h,false);three.cam.aspect=w/h;three.cam.updateProjectionMatrix()}
 function label(text){
   const c=document.createElement('canvas'),x=c.getContext('2d'),F='700 52px system-ui,"Segoe UI","Noto Sans Arabic",sans-serif';x.font=F;
   const w=Math.max(150,Math.ceil(x.measureText(text).width)+60),hh=104,r=34;c.width=w;c.height=hh;
@@ -980,6 +1008,7 @@ function mount3D(sc){
 
 /* ---------- actions ---------- */
 function moveLeft(){const o=$('m-left');if(!o||!$('m-pid'))return;const left=stock($('m-pid').value)-sum(S.shops,s=>Math.max(0,Math.floor(parseFloat(($('m-s-'+s.id)||{}).value)||0)))-Math.max(0,Math.floor(parseFloat($('m-waste').value)||0));o.textContent=left+' '+t('boxes');o.classList.toggle('neg',left<0)}
+function closeLive(){if(!$('c-expd'))return;const ex=num('c-open')+num('c-cash')-num('c-exp')-wageNow().total,v=num('c-counted')-ex;$('c-expd').textContent=fmt(ex);const el=$('c-var');el.textContent=$('c-counted').value===''?'—':fmt(v);el.classList.toggle('neg',$('c-counted').value!==''&&v<0)}
 function wageNow(){const pay={};let total=0;const ins=document.querySelectorAll('input[data-wage]');if(ins.length)ins.forEach(i=>{const a=Math.max(0,Math.round(parseFloat(i.value)||0));if(a>0){pay[i.dataset.wage]=a;total+=a}});else if($('c-wages'))total=Math.max(0,Math.round(parseFloat($('c-wages').value)||0));return{pay,total}}
 const val=id=>$(id).value,num=id=>parseFloat($(id).value)||0;
 async function shrink(file,max=1600){
@@ -1105,7 +1134,7 @@ document.addEventListener('input',e=>{
   }
   if(e.target.id==='p-find'){ui.find=e.target.value.trim();filterTiles();return}
   if((e.target.dataset&&e.target.dataset.move)||e.target.id==='m-pid')moveLeft();
-  if(e.target.id&&e.target.id.startsWith('c-')&&$('c-expd')){const ex=num('c-open')+num('c-cash')-num('c-exp')-wageNow().total,v=num('c-counted')-ex;$('c-expd').textContent=fmt(ex);const el=$('c-var');el.textContent=fmt(v);el.classList.toggle('neg',v<0)}
+  if(e.target.id&&e.target.id.startsWith('c-'))closeLive();
 });
 document.addEventListener('submit',async e=>{
   e.preventDefault();const f=e.target.dataset.form;
